@@ -2,62 +2,119 @@
 
 import Image, { StaticImageData } from "next/image";
 import Draggable, {DraggableCore} from "react-draggable";
+import { useState, useEffect } from 'react';
+import {imgs, imgsType, name, userVote} from '@/lib/data'
+import Link from "next/link";
 
-import human1 from "@/public/human1.png";
-import human2 from "@/public/human2.png";
-import human3 from "@/public/human3.png";
-import human4 from "@/public/human4.png";
-import human5 from "@/public/human5.png";
-import human6 from "@/public/human6.gif";
-import human7 from "@/public/human7.png";
-import human8 from "@/public/human8.png";
-import human9 from "@/public/human9.png";
-import human10 from "@/public/human10.png";
-import human11 from "@/public/human11.png";
-import human12 from "@/public/human12.png";
-import human13 from "@/public/human13.png";
-import human14 from "@/public/human14.png";
-import human15 from "@/public/human15.png";
-import human16 from "@/public/human16.png";
-import human17 from "@/public/human17.png";
-import human18 from "@/public/human18.png";
-import human19 from "@/public/human19.png";
-import human20 from "@/public/human20.png";
-import human21 from "@/public/human21.png";
-import human22 from "@/public/human22.png";
-import human23 from "@/public/human23.png";
-import human24 from "@/public/human24.png";
+function getWindowDimensions() {
+  const { innerWidth: width, innerHeight: height } = window;
+  return {
+    width,
+    height
+  };
+}
 
-import manifesto1 from "@/public/manifesto1.png";
-import manifesto2 from "@/public/manifesto2.png";
-import manifesto3 from "@/public/manifesto3.png";
-import manifesto4 from "@/public/manifesto4.png";
-import manifesto5 from "@/public/manifesto5.png";
-import manifesto6 from "@/public/manifesto6.png";
-import manifesto7 from "@/public/manifesto7.png";
-import manifesto8 from "@/public/manifesto8.png";
-import manifesto9 from "@/public/manifesto9.png";
-import manifesto10 from "@/public/manifesto10.png";
-import manifesto11 from "@/public/manifesto11.png";
-import manifesto12 from "@/public/manifesto12.png";
-import manifesto13 from "@/public/manifesto13.png";
-import manifesto14 from "@/public/manifesto14.png";
-import manifesto15 from "@/public/manifesto15.png";
-import manifesto16 from "@/public/manifesto16.png";
+function useWindowDimensions() {
+  const [windowDimensions, setWindowDimensions] = useState(getWindowDimensions());
 
-const imgs = [human1, human2, human3, human4, human5, human6, human7, human8, human9, human10, human11, human12, human13, human14, human15, human16, human17, human18, human19, human20, human21, human22, human23, human24,
-manifesto1, manifesto2, manifesto3, manifesto4, manifesto5, manifesto6, manifesto7, manifesto8, manifesto9, manifesto10, manifesto11, manifesto12, manifesto13, manifesto14, manifesto15, manifesto16,] as StaticImageData[];
+  useEffect(() => {
+    function handleResize() {
+      setWindowDimensions(getWindowDimensions());
+    }
 
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return windowDimensions;
+}
+
+function getRandom(min: number, max: number): number {
+  return Math.random() * (max - min) + min;
+}
+
+function widthToString(w: number): string {
+  return `w-[${w}rem]`
+}
 
 export default function Home() {
+  const { height, width } = useWindowDimensions();
+  const [userImages, setUserImages] = useState(imgs);
+  const [showVotes, setShowVotes] = useState(false as boolean);
+  const [previewImage, setPreviewImage] = useState(imgs[0].src as StaticImageData);
+  const [showImage, setShowImage] = useState(false as boolean);
+  const [votes, setVotes] = useState(userVote);
+  const size = 2 as number;
+  const widthMultiplier = 36 as number;
+
+  function displayVotes() {setShowVotes(true);}
+  function hideVotes() {setShowVotes(false);}
+
+  function handleClick(num: number, index: number): void {
+    const newVotes = votes.map((vote, i) => {
+        if (i === index) {
+          // Increment the clicked counter
+          return num;
+        } else {
+          return vote;
+        }
+    });
+    setVotes(newVotes);
+    console.log(votes)
+  }
+
+  function imageZoom(img: StaticImageData) {
+    setPreviewImage(img);
+    setShowImage(old => !old);
+  }
+
   return (
-    <main>
-      <div className='inline-flex justify-center items-center p-12 rounded-full border-black border-2'>
-        <p className="font-arial font-normal text-9xl text-center w-[73.5rem]">This manifesto will change as you see fit.</p>
+    <main className={`h-[${height*size}px] w-[${width*size}px] overflow-hidden `}>
+
+      <div onClick={() => setShowImage(false)} className={`${showImage ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} transition-all duration-500 cursor-zoom-out w-screen h-screen fixed z-50 bg-white bg-opacity-90 py-12 pl-16 pr-[29rem]`} >
+        <Image src={previewImage} className="w-full h-full object-contain" alt=''/>  
       </div>
-      <Draggable>
-        <Image src={human1} alt='' className='w-80 h-auto cursor-pointer pointer-events-auto'/>
-      </Draggable>
+      
+      <div className='group' onClick={displayVotes}>
+        <h1 className={`group-hover:opacity-0 opacity-100 transition-all font-arial font-normal text-7xl text-center w-[35rem] h-fit fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2`}>Things to believe in: a manifesto.</h1>
+        <h1 className={`group-hover:opacity-100 group-hover:animate-pulse opacity-0 cursor-pointer transition-all font-arial font-normal text-7xl text-center w-[35rem] h-fit fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2`}>{name}, what do you believe in?</h1>
+      </div>
+
+        {
+          userImages.map((image: imgsType, index: number) =>
+            (
+              <Draggable key={index} defaultPosition={{x: getRandom(16, width*size-(widthMultiplier * 12)), y: getRandom(16, height*size - (widthMultiplier * 12))}}>
+                <div className={`overflow-hidden absolute cursor-move ${image.rounded && 'rounded-md'} shadow-lg`}>
+                  <Image src={image.src} alt='' className={`h-auto pointer-events-none transition-all duration-500`} style={{width: (image.width + votes[index]) * widthMultiplier}}/>
+                </div>
+              </Draggable>
+            )
+          )
+        }
+
+      <section className={`${showVotes ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'} px-4 transition-all duration-500 bg-white w-[24rem] z-50 fixed h-screen overflow-x-clip overflow-y-scroll right-0 text-center font-arial flex flex-col pt-8 pb-20`}>
+        <h1 className='text-4xl mb-6'>You believe in...</h1>
+        
+        {true ? <div className='fixed w-[21rem] bottom-4 cursor-pointer rounded-full px-4 py-2  border-black border-solid border-[1px] bg-white z-50 hover:animate-pulse' onClick={() => hideVotes()}>
+            ← Back
+        </div> :
+
+        <div className='top-6 right-6 fixed cursor-pointer rounded-full px-3 py-1 border-black border-solid border-[1px] bg-white z-50 hover:animate-pulse' onClick={() => hideVotes()}>X</div>}
+        
+        {userImages.map((image, index) => 
+                <>
+                    <Image src={image.src} alt='' className={`${image.rounded && 'rounded-md'} w-full h-auto ${showImage ? 'cursor-zoom-out' : 'cursor-zoom-in'}`} onClick={() => imageZoom(image.src)} onMouseOver={() => {showImage && setPreviewImage(image.src)}}/>
+                    <div className='flex w-full place-content-between mb-4'>
+                        <p onClick={() => handleClick(1, index)} className={`${votes[index] === 1 || votes[index] === 2 ? 'opacity-100' : 'opacity-30'} cursor-pointer`}>YES</p>
+                        <p onClick={() => handleClick(0, index)} className={`${votes[index] === 0 || votes[index] === 2 ? 'opacity-100' : 'opacity-30'} cursor-pointer`}>DON'T CARE</p>
+                        <p onClick={() => handleClick(-1, index)} className={`${votes[index] === -1 || votes[index] === 2 ? 'opacity-100' : 'opacity-30'} cursor-pointer`}>NO</p>
+                    </div>
+                </>
+                
+            )
+        }
+
+      </section>
     </main>
   );
 }
